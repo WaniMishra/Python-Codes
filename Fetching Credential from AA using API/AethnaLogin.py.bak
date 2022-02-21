@@ -1,0 +1,46 @@
+#This is a code to first authenticate the user using authentication token generated #dynamically during run time, then fetching username & password and finally logout
+
+import http.client
+import json
+import requests
+from requests.auth import HTTPBasicAuth
+from operator import itemgetter
+conn = http.client.HTTPSConnection("rpa-d.ikshealth.com")
+payload = {"username": "<your AA user name>","apiKey": "<your AA API Key>"}
+headers = {
+'Content-Type': 'application/json'
+}
+
+#to authenticate
+conn.request("POST", "/v1/authentication", json.dumps(payload), headers)
+res = conn.getresponse()
+data = res.read()
+auth_token = (json.loads(data.decode('utf-8')))['token']
+#print (auth_token)
+
+#to get the attributes
+headers={
+  'Content-Type': 'application/json',
+  'X-Authorization':  auth_token
+  }
+  
+#getting username
+conn.request("GET", "/v2/credentialvault/credentials/<credential attribute>/attributevalues?credentialAttributeId=<attributeID for username>","value",headers)
+user_res = conn.getresponse()
+user_data = user_res.read()
+user_data1 = (json.loads(user_data.decode("utf-8")))['list']
+user_data2 = (user_data1[0])['value']
+print (user_data2)
+
+#getting password
+conn.request("GET", "/v2/credentialvault/credentials/<credential attribute>/attributevalues?credentialAttributeId=<attributeID for password>","value",headers)
+pass_res = conn.getresponse()
+pass_data = pass_res.read()
+pass_data1 = (json.loads(pass_data.decode("utf-8")))['list']
+pass_data2 = (pass_data1[0])['value']
+print (pass_data2)
+
+
+#logout
+conn.request("POST","/v1/authentication/logout","headers")
+  
